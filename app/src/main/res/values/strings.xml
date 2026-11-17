@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Bookshelf - Manga</string>
+    <string name="loading_failed">Error al cargar los mangas</string>
+    <string name="retry">Reintentar</string>
+    <string name="loading">Cargando mangas…</string>
+    <string name="book_cover">Portada del manga</string>
+    <string name="search_manga">Buscar manga…</string>
+    <string name="no_books_found">No se encontraron mangas</string>
+</resources>
