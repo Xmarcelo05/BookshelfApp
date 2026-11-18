@@ -43,4 +43,26 @@ class BooksViewModelTest {
         booksViewModel.onSearchQueryChange("Naruto")
         assertEquals("Naruto", booksViewModel.searchQuery)
     }
+
+    @Test
+    fun booksViewModel_resetSearch_restoresDefaults() = runTest {
+        val booksViewModel = BooksViewModel(
+            booksRepository = FakeNetworkBooksRepository()
+        )
+        booksViewModel.selectGenre("Shonen")
+        booksViewModel.onSearchQueryChange("Naruto")
+        booksViewModel.resetSearch()
+
+        assertEquals("Todos", booksViewModel.selectedGenre)
+        assertEquals("", booksViewModel.searchQuery)
+    }
+
+    @Test
+    fun booksViewModel_onSearchSubmit_updatesGenreToPersonalizado() = runTest {
+        val booksViewModel = BooksViewModel(
+            booksRepository = FakeNetworkBooksRepository()
+        )
+        booksViewModel.onSearchSubmit("One Piece")
+        assertEquals("Personalizado", booksViewModel.selectedGenre)
+    }
 }

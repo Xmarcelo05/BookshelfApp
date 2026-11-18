@@ -37,19 +37,30 @@ class NetworkBooksRepository(
             val items = searchResponse.items
 
             if (items.isNullOrEmpty()) {
-                Log.w(tag, "Search items empty for query '$query'. Falling back to curated manga.")
-                return MangaFallbackData.getByQuery(query)
+                Log.w(tag, "Search items empty for query '$query'.")
+                return emptyList()
             }
 
-            // Following codelab: fetch individual book details to retrieve high quality thumbnails
+            // Optimize thumbnail retrieval: use direct volumeInfo from search items when available,
+            // avoiding unnecessary secondary network requests that can trigger HTTP 429 rate limits.
             val books = coroutineScope {
                 items.map { item ->
                     async {
                         try {
-                            val details = booksApiService.getBookDetails(item.id)
-                            val info = details.volumeInfo ?: item.volumeInfo
-                            val rawUrl = info?.imageLinks?.thumbnail
-                                ?: info?.imageLinks?.smallThumbnail
+                            val directInfo = item.volumeInfo
+                            val directThumb = directInfo?.imageLinks?.thumbnail
+                                ?: directInfo?.imageLinks?.smallThumbnail
+
+                            val (info, rawUrl) = if (!directThumb.isNullOrEmpty()) {
+                                Pair(directInfo, directThumb)
+                            } else {
+                                val details = booksApiService.getBookDetails(item.id)
+                                val detailInfo = details.volumeInfo ?: directInfo
+                                val detailThumb = detailInfo?.imageLinks?.thumbnail
+                                    ?: detailInfo?.imageLinks?.smallThumbnail
+                                Pair(detailInfo, detailThumb)
+                            }
+
                             val title = info?.title ?: "Manga #${item.id}"
                             val genre = info?.categories?.firstOrNull() ?: "Manga"
                             val desc = info?.description ?: ""
@@ -68,18 +79,14 @@ class NetworkBooksRepository(
                                 null
                             }
                         } catch (e: Exception) {
-                            Log.e(tag, "Failed to fetch details for book ${item.id}", e)
+                            Log.e(tag, "Failed to resolve details for book ${item.id}", e)
                             null
                         }
                     }
                 }.awaitAll().filterNotNull()
             }
 
-            if (books.isNotEmpty()) {
-                books
-            } else {
-                MangaFallbackData.getByQuery(query)
-            }
+            books
         } catch (e: Exception) {
             Log.e(tag, "API error fetching books for query '$query'. Using fallback dataset.", e)
             MangaFallbackData.getByQuery(query)

@@ -106,11 +106,10 @@ object MangaFallbackData {
         if (q.isEmpty() || q == "manga" || q == "todos" || q == "all") {
             return mangaList
         }
-        val filtered = mangaList.filter {
+        return mangaList.filter {
             it.title.lowercase().contains(q) ||
             it.genre.lowercase().contains(q) ||
             it.description.lowercase().contains(q)
         }
-        return if (filtered.isNotEmpty()) filtered else mangaList
     }
 }

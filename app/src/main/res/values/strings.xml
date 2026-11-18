@@ -5,6 +5,10 @@
     <string name="retry">Reintentar</string>
     <string name="loading">Cargando mangas…</string>
     <string name="book_cover">Portada del manga</string>
-    <string name="search_manga">Buscar manga…</string>
+    <string name="search_manga">Buscar manga o título…</string>
+    <string name="search_action">Buscar</string>
+    <string name="clear_search">Limpiar búsqueda</string>
     <string name="no_books_found">No se encontraron mangas</string>
+    <string name="no_results_for">No se encontraron resultados para \"%1$s\"</string>
+    <string name="view_all_manga">Restablecer filtros</string>
 </resources>

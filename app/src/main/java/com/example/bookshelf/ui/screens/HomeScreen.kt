@@ -74,6 +74,7 @@ fun HomeScreen(
     onSearchSubmit: (String) -> Unit,
     retryAction: () -> Unit,
     modifier: Modifier = Modifier,
+    onResetSearch: () -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     val genres = listOf("Todos", "Shonen", "Seinen", "Shojo", "Acción", "Fantasía", "Romance", "Aventura")
@@ -84,7 +85,7 @@ fun HomeScreen(
             .fillMaxSize()
             .padding(contentPadding)
     ) {
-        // Search bar
+        // Search bar with interactive search and clear actions
         OutlinedTextField(
             value = searchQuery,
             onValueChange = onSearchQueryChange,
@@ -93,19 +94,31 @@ fun HomeScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             placeholder = { Text(stringResource(R.string.search_manga)) },
             leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = null
-                )
+                IconButton(onClick = {
+                    focusManager.clearFocus()
+                    if (searchQuery.isNotBlank()) {
+                        onSearchSubmit(searchQuery)
+                    }
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = stringResource(R.string.search_action)
+                    )
+                }
             },
             trailingIcon = {
-                AnimatedVisibility(
-                    visible = searchQuery.isNotEmpty(),
-                    enter = fadeIn(),
-                    exit = fadeOut()
-                ) {
-                    IconButton(onClick = { onSearchQueryChange("") }) {
-                        Icon(imageVector = Icons.Default.Clear, contentDescription = "Limpiar")
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    AnimatedVisibility(
+                        visible = searchQuery.isNotEmpty(),
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        IconButton(onClick = { onSearchQueryChange("") }) {
+                            Icon(
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = stringResource(R.string.clear_search)
+                            )
+                        }
                     }
                 }
             },
@@ -150,10 +163,20 @@ fun HomeScreen(
         ) {
             when (booksUiState) {
                 is BooksUiState.Loading -> LoadingScreen(modifier = Modifier.fillMaxSize())
-                is BooksUiState.Success -> BooksGridScreen(
-                    books = booksUiState.books,
-                    modifier = Modifier.fillMaxSize()
-                )
+                is BooksUiState.Success -> {
+                    if (booksUiState.books.isEmpty()) {
+                        EmptyScreen(
+                            query = if (searchQuery.isNotBlank()) searchQuery else selectedGenre,
+                            onReset = onResetSearch,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        BooksGridScreen(
+                            books = booksUiState.books,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
                 is BooksUiState.Error -> ErrorScreen(
                     retryAction = retryAction,
                     modifier = Modifier.fillMaxSize()
@@ -213,6 +236,46 @@ fun ErrorScreen(
         )
         Button(onClick = retryAction) {
             Text(stringResource(R.string.retry))
+        }
+    }
+}
+
+/**
+ * Screen displayed when no books match the query or genre.
+ */
+@Composable
+fun EmptyScreen(
+    query: String,
+    onReset: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            imageVector = Icons.Default.Search,
+            contentDescription = null,
+            modifier = Modifier.size(80.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = stringResource(R.string.no_books_found),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = stringResource(R.string.no_results_for, query),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(20.dp))
+        Button(onClick = onReset) {
+            Text(stringResource(R.string.view_all_manga))
         }
     }
 }

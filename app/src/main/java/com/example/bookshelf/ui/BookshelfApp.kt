@@ -41,7 +41,17 @@ fun BookshelfApp() {
                 onGenreSelected = booksViewModel::selectGenre,
                 onSearchQueryChange = booksViewModel::onSearchQueryChange,
                 onSearchSubmit = booksViewModel::onSearchSubmit,
-                retryAction = { booksViewModel.getBooks(booksViewModel.selectedGenre) },
+                onResetSearch = booksViewModel::resetSearch,
+                retryAction = {
+                    val query = if (booksViewModel.searchQuery.isNotBlank()) {
+                        booksViewModel.searchQuery
+                    } else if (booksViewModel.selectedGenre != "Personalizado" && booksViewModel.selectedGenre != "Todos") {
+                        "${booksViewModel.selectedGenre} manga"
+                    } else {
+                        "manga"
+                    }
+                    booksViewModel.getBooks(query)
+                },
                 contentPadding = innerPadding
             )
         }

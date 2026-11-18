@@ -56,11 +56,7 @@ class BooksViewModel(
             booksUiState = BooksUiState.Loading
             booksUiState = try {
                 val books = booksRepository.getBooks(query)
-                if (books.isEmpty()) {
-                    BooksUiState.Error
-                } else {
-                    BooksUiState.Success(books)
-                }
+                BooksUiState.Success(books)
             } catch (e: IOException) {
                 BooksUiState.Error
             } catch (e: HttpException) {
@@ -79,6 +75,15 @@ class BooksViewModel(
         searchQuery = ""
         val query = if (genre == "Todos") "manga" else "$genre manga"
         getBooks(query)
+    }
+
+    /**
+     * Resets the search and filters back to default.
+     */
+    fun resetSearch() {
+        selectedGenre = "Todos"
+        searchQuery = ""
+        getBooks("manga")
     }
 
     /**
